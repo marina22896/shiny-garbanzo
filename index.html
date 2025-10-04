@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>WebAR — Custom Image + Video</title>
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    body, html { margin: 0; height: 100%; }
+    #container { width: 100%; height: 100vh; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 1; uiLoading: no; uiScanning: no; uiError: no"
+      color-space="sRGB" 
+      renderer="antialias: true; alpha: true"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      embedded>
+
+      <!-- Preload assets -->
+      <a-assets>
+        <!-- Replace with your own target image (used only for preview / debugging, not tracking) -->
+        <img id="targetImage" src="./targets.jpg" />
+
+        <!-- Your video (must be muted to autoplay) -->
+        <video id="myVideo" src="./video.mp4" loop muted playsinline webkit-playsinline crossorigin="anonymous" style="display:none"></video>
+      </a-assets>
+
+      <!-- Camera -->
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- AR Content bound to your image target -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <!-- Plane showing the video -->
+        <a-plane position="0 0 0" rotation="0 0 0" height="1" width="1" material="shader: flat; src: #myVideo"></a-plane>
+      </a-entity>
+
+    </a-scene>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const video = document.getElementById('myVideo');
+      const target = document.querySelector('[mindar-image-target]');
+
+      target.addEventListener('targetFound', async () => {
+        try {
+          await video.play();
+        } catch (err) {
+          console.warn('Autoplay blocked. Consider adding a play button.', err);
+        }
+      });
+
+      target.addEventListener('targetLost', () => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    });
+  </script>
+
+  <!--
+    Instructions:
+    1. Replace ./myImage.jpg with your reference image.
+    2. Generate ./myTarget.mind from that image using mindarjs tools:
+       npm i -g mindarjs-image-target-tools
+       mindarjs-tg ./myImage.jpg --outputDir ./
+    3. Replace ./ideo.mp4 with your own video.
+    4. Host everything on HTTPS and test on mobile.
+  -->
+</body>
+</html>
